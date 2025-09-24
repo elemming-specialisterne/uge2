@@ -1,6 +1,8 @@
-class Hand(string name)
+// Contains the Hand class representing a player's or dealer's hand in Blackjack
+class Hand(string name, bool isbot = false)
 {
     private readonly List<Card> cards = [];
+    private readonly bool isBot = isbot;
     public readonly string PlayerName = name;
 
     // Add a card to the hand
@@ -30,6 +32,12 @@ class Hand(string name)
         }
 
         return value;
+    }
+
+    // Check if the hand belongs to a bot
+    public bool IsBot()
+    {
+        return isBot;
     }
 
     // Check if the hand is bust (over 21)

@@ -4,19 +4,17 @@ class Game
 {
     private readonly Deck deck;
     private readonly List<Hand> playerHands;
-    private readonly List<Hand> BotHands;
+    private readonly Scoring scoring;
 
-    public Game(string[] playerNames, string[] botNames, int numberOfDecks)
+    public Game(string[] names, bool[] isBot, int numberOfDecks, Scoring scoring)
     {
+        this.scoring = scoring;
         deck = new(numberOfDecks);
         playerHands = [];
-        for (int i = 0; i < playerNames.Length; i++)
-            playerHands.Add(new(playerNames[i]));
-        BotHands = [];
-        for (int i = 0; i < botNames.Length; i++)
-            BotHands.Add(new(botNames[i]));
+        for (int i = 0; i < names.Length; i++)
+            playerHands.Add(new(names[i], isBot[i]));
         // Always add one dealer
-        BotHands.Add(new("The Dealer"));
+        playerHands.Add(new("The Dealer", true));
     }
     public void Start()
     {
@@ -26,23 +24,26 @@ class Game
         // Initial dealling
         foreach (var playerHand in playerHands)
             DealInitialCards(playerHand);
-        foreach (var botHand in BotHands)
-            DealInitialCards(botHand);
 
         // Player turns
         foreach (var playerHand in playerHands)
-            PlayerTurn(playerHand);
-        foreach (var botHand in BotHands)
-            BotTurn(botHand);
+            if (playerHand.IsBot())
+                BotTurn(playerHand);
+            else
+                PlayerTurn(playerHand);
 
         // Determine results
-        foreach (var playerHand in playerHands)
+        foreach (var hand in playerHands[..^1]) // Exclude dealer
         {
-            var result = DetermineWinner(playerHand, BotHands[^1]); // Compare with dealer
+            var result = DetermineWinner(hand, playerHands[^1]); // Compare with dealer
             Commens.WriteLineToUser(result);
         }
 
         ClearHands();
+
+        scoring.DisplayScores();
+        Commens.WriteLineToUser("Round over. Press Enter to continue...");
+        Commens.WaitForUser();
     }
 
     public void DealInitialCards(Hand playerHand)
@@ -107,29 +108,47 @@ class Game
             Commens.WriteLineToUser($"{BotHand.PlayerName} stands with value {BotHand.GetValue()}");
     }
 
-    private string DetermineWinner(Hand playerHand, Hand BotHand)
+    private string DetermineWinner(Hand playerHand, Hand dealerHand)
     {
-        
-        if (playerHand.IsBust())
-            return $"{playerHand.PlayerName} busts and loses to {BotHand.PlayerName}.";
         if (playerHand.IsBlackjack())
-            return $"{playerHand.PlayerName} has Blackjack and wins against {BotHand.PlayerName}!";
-        if (BotHand.IsBust())
-            return $"{BotHand.PlayerName} busts. {playerHand.PlayerName} wins!";
+        {
+            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), true);
+            return $"{playerHand.PlayerName} has Blackjack and wins against {dealerHand.PlayerName}!";
+        }
+        if (dealerHand.IsBust())
+        {
+            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), true);
+            return $"{dealerHand.PlayerName} busts. {playerHand.PlayerName} wins!";
+        }
+        if (playerHand.IsBust())
+        {
+            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), false);
+            return $"{playerHand.PlayerName} busts and loses to {dealerHand.PlayerName}.";
+        }
+        if (dealerHand.IsBlackjack())
+        {
+            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), false);
+            return $"{dealerHand.PlayerName} has Blackjack and wins against {playerHand.PlayerName}.";
+        }
+
         int playerValue = playerHand.GetValue();
-        int dealerValue = BotHand.GetValue();
+        int dealerValue = dealerHand.GetValue();
         if (playerValue > dealerValue)
-            return $"{playerHand.PlayerName} wins against {BotHand.PlayerName}!";
+        {
+            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), true);
+            return $"{playerHand.PlayerName} wins against {dealerHand.PlayerName}!";
+        }
         if (playerValue < dealerValue)
-            return $"{playerHand.PlayerName} loses to {BotHand.PlayerName}.";
-        return $"{playerHand.PlayerName} has a push with {BotHand.PlayerName}.";
+        {
+            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), false);
+            return $"{playerHand.PlayerName} loses to {dealerHand.PlayerName}.";
+        }
+        return $"{playerHand.PlayerName} has a push with {dealerHand.PlayerName}.";
     }
 
     private void ClearHands()
     {
         foreach (var hand in playerHands)
-            hand.Clear();
-        foreach (var hand in BotHands)
             hand.Clear();
     }
 }

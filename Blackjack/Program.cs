@@ -2,7 +2,7 @@
 {
     private int numberOfDecks = 1;
     private string[] playerNames = ["Player1"];
-    private string[] botNames = [];
+    private bool[] isBot = [];
 
     public Program()
     {
@@ -18,7 +18,7 @@
         Commens.ClearConsole();
         SetupGame();
 
-        Game game = new(playerNames, botNames, numberOfDecks);
+        Game game = new(playerNames, isBot, numberOfDecks, new Scoring(playerNames));
         while (true)
         {
             Commens.ClearConsole();
@@ -38,7 +38,7 @@
                     {
                         SetupGame();
                     }
-                    game = new(playerNames, botNames, numberOfDecks);
+                    game = new(playerNames, isBot, numberOfDecks, new Scoring(playerNames));
                 }
             }
             Commens.ClearConsole();
@@ -52,18 +52,12 @@
     {
         int numberOfPlayers = Commens.GetIntFromUser("Enter number of players (1-4): ", 1, 4);
         playerNames = new string[numberOfPlayers];
+        isBot = new bool[numberOfPlayers];
         for (int i = 0; i < numberOfPlayers; i++)
         {
-            playerNames[i] = Commens.GetStringFromUser($"Player {i + 1}, please enter your name:");
+            playerNames[i] = Commens.GetStringFromUser($"Player {i + 1}, please enter name:");
+            isBot[i] = Commens.GetYorN($"Is {playerNames[i]} a bot? (Y/N): ") == "Y";
             Commens.WriteLineToUser($"Welcome, {playerNames[i]}!");
-        }
-
-        int numberOfBots = Commens.GetIntFromUser("Enter number of bots excluding Dealer (0-3): ", 0, 3);
-        botNames = new string[numberOfBots];
-        for (int i = 0; i < numberOfBots; i++)
-        {
-            botNames[i] = Commens.GetStringFromUser($"Enter name of Bot {i + 1}:");
-            Commens.WriteLineToUser($"Give {botNames[i]} a warm welcome!");
         }
         numberOfDecks = Commens.GetIntFromUser("Enter number of decks (1-8): ", 1, 8);
     }
