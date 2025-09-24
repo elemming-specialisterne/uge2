@@ -6,21 +6,21 @@ class Game
     private readonly List<Hand> playerHands;
     private readonly List<Hand> BotHands;
 
-    public Game(int numberOfPLayers = 1, int numberOfBots = 0, int numberOfDecks = 1)
+    public Game(string[] playerNames, string[] botNames, int numberOfDecks)
     {
         deck = new(numberOfDecks);
         playerHands = [];
-        for (int i = 0; i < numberOfPLayers; i++)
-            playerHands.Add(new("Player " + (i + 1)));
+        for (int i = 0; i < playerNames.Length; i++)
+            playerHands.Add(new(playerNames[i]));
         BotHands = [];
-        for (int i = 0; i < numberOfBots; i++)
-            BotHands.Add(new("Bot " + (i + 1)));
+        for (int i = 0; i < botNames.Length; i++)
+            BotHands.Add(new(botNames[i]));
         // Always add one dealer
         BotHands.Add(new("The Dealer"));
     }
     public void Start()
     {
-        Commens.WriteLineToUser("Blackjack started!");
+        Commens.WriteLineToUser("Starting a new round...");
         Commens.WriteLineToUser("Dealing cards...");
 
         // Initial dealling
@@ -49,13 +49,14 @@ class Game
     {
         playerHand.AddCard(deck.DealCard());
         playerHand.AddCard(deck.DealCard());
-        Commens.WriteLineToUser(playerHand.PlayerName + "'s first card: " + playerHand.ShowFirstCard());
+        Commens.WriteLineToUser(playerHand.PlayerName + "'s open card: " + playerHand.ShowSecondCard());
     }
 
     public void PlayerTurn(Hand playerHand)
     {
         while (true)
         {
+            //Check if player is bust or blackjack
             Commens.WriteLineToUser($"{playerHand.PlayerName}'s hand: {playerHand} (Value: {playerHand.GetValue()})");
             if (playerHand.IsBlackjack())
             {
@@ -68,6 +69,7 @@ class Game
                 return;
             }
 
+            // Ask player to Hit or Stand
             var choice = Commens.GetHorS("Do you want to Hit or Stand? (H/S): ");
             if (choice == "H")
             {
@@ -84,13 +86,21 @@ class Game
 
     private void BotTurn(Hand BotHand)
     {
+        // check for blackjack
+        if (BotHand.IsBlackjack())
+        {
+            Commens.WriteLineToUser($"{BotHand.PlayerName} has Blackjack!");
+            return;
+        }
+
         Commens.WriteLineToUser($"{BotHand.PlayerName}'s hand: {BotHand} (Value: {BotHand.GetValue()})");
         while (BotHand.GetValue() < 17)
         {
-            Commens.WriteLineToUser("Dealer hits.");
+            Commens.WriteLineToUser($"{BotHand.PlayerName} hits.");
             BotHand.AddCard(deck.DealCard());
             Commens.WriteLineToUser($"{BotHand.PlayerName}'s hand: {BotHand} (Value: {BotHand.GetValue()})");
         }
+
         if (BotHand.IsBust())
             Commens.WriteLineToUser($"{BotHand.PlayerName} busts!");
         else

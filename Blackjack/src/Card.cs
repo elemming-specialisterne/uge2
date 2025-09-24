@@ -1,3 +1,4 @@
+// A simple representation of a playing card
 class Card(Card.Suit suit, Card.Rank rank)
 {
     public enum Suit
@@ -28,11 +29,13 @@ class Card(Card.Suit suit, Card.Rank rank)
     public Suit CardSuit { get; private set; } = suit;
     public Rank CardRank { get; private set; } = rank;
 
+    // Get the value of the Card's CardRank
     public int GetValue()
     {
         return (int)CardRank;
     }
 
+    // Have ToString display readable card info
     public override string ToString()
     {
         return $"{CardRank} of {CardSuit}";

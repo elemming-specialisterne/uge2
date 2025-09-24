@@ -1,3 +1,4 @@
+// A simple implementation of a deck consisting of 1 - 8 standard 52-card decks.
 class Deck
 {
     private readonly List<Card> cards;
@@ -9,15 +10,16 @@ class Deck
         cards = [];
         random = new Random();
         this.numberOfDecks = numberOfDecks;
-        InitializeDeck();
+        InitializeDeck(this.numberOfDecks);
         Shuffle();
     }
 
-    private void InitializeDeck()
+    // Initialize the deck with the specified number of standard 52-card decks in sorted order
+    private void InitializeDeck(int numberOfDecks)
     {
         Card.Suit[] suits = Enum.GetValues<Card.Suit>();
         Card.Rank[] ranks = Enum.GetValues<Card.Rank>();
-        
+
         for (int d = 0; d < numberOfDecks; d++)
             foreach (var suit in suits)
             {
@@ -28,6 +30,7 @@ class Deck
             }
     }
 
+    // Shuffle the deck using the Fisher-Yates algorithm
     private void Shuffle()
     {
         int n = cards.Count;
@@ -38,14 +41,16 @@ class Deck
         }
     }
 
+    // Reshuffle the deck when all cards have been dealt
     private void ReShuffle()
     {
         Commens.WriteLineToUser("Reshuffling the deck...");
         cards.Clear();
-        InitializeDeck();
+        InitializeDeck(numberOfDecks);
         Shuffle();
     }
 
+    // Take a card out of the deck
     public Card DealCard()
     {
         if (cards.Count == 0)
