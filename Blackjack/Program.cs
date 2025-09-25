@@ -55,7 +55,7 @@
         }
         numberOfDecks = Commens.GetIntFromUser("Enter number of decks (1-8): ", 1, 8);
 
-        game = new(playerNames, isBot, numberOfDecks, new Scoring(playerNames));
+        game = new(playerNames, isBot, numberOfDecks, new Point_system(playerNames));
     }
 
     static void Main()
