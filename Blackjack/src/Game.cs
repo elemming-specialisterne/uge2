@@ -19,9 +19,50 @@ class Game
     public void Start()
     {
         Commens.WriteLineToUser("Starting a new round...");
-        Commens.WriteLineToUser("Dealing cards...");
+
+        if (scoring.IsBetting())
+        {
+            // Get bets from players
+            Commens.WriteLineToUser("Placing bets...");
+            for (int i = 0; i < players.Count - 1; i++) // Exclude dealer
+            {
+                int currentScore = scoring.GetPlayerScore(i);
+                if (players[i].IsBot())
+                {
+                    // Simple bot logic: 10% of chips or 10 or all remaining if less than 10
+                    int botBet = Math.Min(Math.Max(10, Convert.ToInt32(currentScore*0.1)), currentScore);
+                    scoring.SetBet(i, botBet);
+                    Commens.WriteLineToUser($"{players[i].GetName()} bets {botBet} Chips");
+                    continue;
+                }
+                Commens.WriteLineToUser($"{players[i].GetName()}'s current score: {currentScore} Chips");
+                int bet;
+                while (true)
+                {
+                    if (players[i].IsOut())
+                    {
+                        Commens.WriteLineToUser($"{players[i].GetName()} is out of the game!");
+                        break;
+                    }
+                    if (currentScore <= 0)
+                    {
+                        Commens.WriteLineToUser($"{players[i].GetName()} has no Chips left to bet and is out!");
+                        players[i].SetOut(true);
+                        break;
+                    }
+                    bet = Commens.GetIntFromUser($"{players[i].GetName()}, enter your bet amount (max {currentScore}): ", 1, currentScore);
+                    int remainingChips = scoring.SetBet(i, bet);
+                    if (remainingChips == -1)
+                        break; // Bet accepted
+                    else
+                        Commens.WriteLineToUser($"Invalid bet. You have {remainingChips} Chips remaining.");
+                }
+            }
+        }
+
 
         // Initial dealling
+        Commens.WriteLineToUser("Dealing cards...");
         foreach (var playerHands in players)
             foreach (var playerHand in playerHands.GetHands())
                 DealInitialCards(playerHand);
@@ -204,6 +245,6 @@ class Game
     private void ClearHands()
     {
         foreach (var player in players)
-            player.clear();
+            player.Clear();
     }
 }

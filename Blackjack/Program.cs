@@ -3,6 +3,7 @@
     private int numberOfDecks = 1;
     private string[] playerNames = ["Player1"];
     private bool[] isBot = [];
+    private Scoring? scoringChoice;
     private Game? game;
 
     public Program()
@@ -42,8 +43,10 @@
         Commens.WriteLineToUser("Thanks for playing! Goodbye!");
     }
 
+    // Set up the game by getting player details and scoring system
     private void SetupGame()
     {
+        // Get player details
         int numberOfPlayers = Commens.GetIntFromUser("Enter number of players (1-4): ", 1, 4);
         playerNames = new string[numberOfPlayers];
         isBot = new bool[numberOfPlayers];
@@ -53,9 +56,19 @@
             isBot[i] = Commens.GetYorN($"Is {playerNames[i]} a bot? (Y/N): ") == "Y";
             Commens.WriteLineToUser($"Welcome, {playerNames[i]}!");
         }
+
+        // Get number of decks
         numberOfDecks = Commens.GetIntFromUser("Enter number of decks (1-8): ", 1, 8);
 
-        game = new(playerNames, isBot, numberOfDecks, new Point_system(playerNames));
+        // Choose scoring system
+        string scoringInput = Commens.GetYorN("Do you want to use betting system? (Y/N): ");
+        if (scoringInput == "Y")
+            scoringChoice = new Betting(playerNames, Commens.GetIntFromUser("Enter starting chips for each player (e.g., 100): ", 1, 10000));
+        else
+            scoringChoice = new Point_system(playerNames);
+
+        // Initialize game
+        game = new(playerNames, isBot, numberOfDecks, scoringChoice);
     }
 
     static void Main()
