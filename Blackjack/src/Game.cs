@@ -3,18 +3,18 @@ using System.Globalization;
 class Game
 {
     private readonly Deck deck;
-    private readonly List<Hand> playerHands;
+    private readonly List<Player> players;
     private readonly Scoring scoring;
 
     public Game(string[] names, bool[] isBot, int numberOfDecks, Scoring scoring)
     {
         this.scoring = scoring;
         deck = new(numberOfDecks);
-        playerHands = [];
+        players = [];
         for (int i = 0; i < names.Length; i++)
-            playerHands.Add(new(names[i], isBot[i]));
+            players.Add(new(names[i], isBot[i]));
         // Always add one dealer
-        playerHands.Add(new("The Dealer", true));
+        players.Add(new("The Dealer", true));
     }
     public void Start()
     {
@@ -22,25 +22,44 @@ class Game
         Commens.WriteLineToUser("Dealing cards...");
 
         // Initial dealling
-        foreach (var playerHand in playerHands)
-            DealInitialCards(playerHand);
+        foreach (var playerHands in players)
+            foreach (var playerHand in playerHands.GetHands())
+                DealInitialCards(playerHand);
+
+        Commens.WriteLineToUser(players[^1].GetName() + "'s open card: " + players[^1].GetHands()[0].ShowSecondCard());
 
         // Player turns
-        foreach (var playerHand in playerHands)
-            if (playerHand.IsBot())
-                BotTurn(playerHand);
+        foreach (var player in players)
+        {
+            if (player.IsBot())
+                BotTurn(player);
             else
-                PlayerTurn(playerHand);
+                PlayerTurn(player);
+            Commens.WaitForUser();
+        }
 
         // Determine results
-        foreach (var hand in playerHands[..^1]) // Exclude dealer
+            string result;
+        foreach (var player in players[..^1]) // Exclude dealer
         {
-            var result = DetermineWinner(hand, playerHands[^1]); // Compare with dealer
-            Commens.WriteLineToUser(result);
+            if (player.GetHands().Count > 1)
+            {
+                for (int i = 0; i < player.GetHands().Count; i++)
+                {
+                    result = DetermineWinner(player, i, players[^1]); // Compare with dealer
+                    Commens.WriteLineToUser(result);
+                }
+            }
+            else
+            {
+                result = DetermineWinner(player, 0, players[^1]); // Compare with dealer
+                Commens.WriteLineToUser(result);
+            }
         }
 
         ClearHands();
 
+        scoring.IncrementTotalGames();
         scoring.DisplayScores();
         Commens.WriteLineToUser("Round over. Press Enter to continue...");
         Commens.WaitForUser();
@@ -50,15 +69,40 @@ class Game
     {
         playerHand.AddCard(deck.DealCard());
         playerHand.AddCard(deck.DealCard());
-        Commens.WriteLineToUser(playerHand.PlayerName + "'s open card: " + playerHand.ShowSecondCard());
+    }
+    
+    public void PlayerTurn(Player player)
+    {
+        for (int i = 0;  i < player.GetHands().Count; i++)
+        {
+            Hand hand = player.GetHands()[i];
+            PlayerHandTurn(hand, player, i);
+        }
     }
 
-    public void PlayerTurn(Hand playerHand)
+    public void PlayerHandTurn(Hand playerHand, Player player, int handnumber)
     {
         while (true)
         {
             //Check if player is bust or blackjack
-            Commens.WriteLineToUser($"{playerHand.PlayerName}'s hand: {playerHand} (Value: {playerHand.GetValue()})");
+            if (player.GetHands().Count > 1)
+                Commens.WriteLineToUser($"\n{player.GetName()}'s turn for hand {handnumber + 1}: {playerHand} (Value: {playerHand.GetValue()})");
+            else
+                Commens.WriteLineToUser($"\n{player.GetName()}'s turn: {playerHand} (Value: {playerHand.GetValue()})");
+            if (playerHand.CanSplit())
+            {
+                var splitChoice = Commens.GetYorN("Do you want to split? (Y/N): ");
+                if (splitChoice == "Y")
+                {
+                    Commens.WriteLineToUser("Splitting hand...");
+                    var newHand = new Hand(playerHand.IsBot());
+                    newHand.AddCard(playerHand.RemoveSecondCard());
+                    player.AddHand(newHand);
+                    playerHand.AddCard(deck.DealCard());
+                    newHand.AddCard(deck.DealCard());
+                    continue; // Continue with the original hand
+                }
+            }
             if (playerHand.IsBlackjack())
             {
                 Commens.WriteLineToUser("Blackjack!");
@@ -85,70 +129,81 @@ class Game
         }
     }
 
-    private void BotTurn(Hand BotHand)
+    private void BotTurn(Player bot)
+    {
+        foreach (var hand in bot.GetHands())
+        {
+            Commens.WriteLineToUser($"\n{bot.GetName()}'s turn for hand: {hand} (Value: {hand.GetValue()})");
+            BotHandTurn(hand, bot.GetName());
+        }
+    }
+
+    private void BotHandTurn(Hand botHand, string botName)
     {
         // check for blackjack
-        if (BotHand.IsBlackjack())
+        if (botHand.IsBlackjack())
         {
-            Commens.WriteLineToUser($"{BotHand.PlayerName} has Blackjack!");
+            Commens.WriteLineToUser($"{botName} has Blackjack!");
             return;
         }
 
-        Commens.WriteLineToUser($"{BotHand.PlayerName}'s hand: {BotHand} (Value: {BotHand.GetValue()})");
-        while (BotHand.GetValue() < 17)
+        Commens.WriteLineToUser($"{botName}'s hand: {botHand} (Value: {botHand.GetValue()})");
+        while (botHand.GetValue() < 17)
         {
-            Commens.WriteLineToUser($"{BotHand.PlayerName} hits.");
-            BotHand.AddCard(deck.DealCard());
-            Commens.WriteLineToUser($"{BotHand.PlayerName}'s hand: {BotHand} (Value: {BotHand.GetValue()})");
+            Commens.WriteLineToUser($"{botName} hits.");
+            botHand.AddCard(deck.DealCard());
+            Commens.WriteLineToUser($"{botName}'s hand: {botHand} (Value: {botHand.GetValue()})");
         }
 
-        if (BotHand.IsBust())
-            Commens.WriteLineToUser($"{BotHand.PlayerName} busts!");
+        if (botHand.IsBust())
+            Commens.WriteLineToUser($"{botName} busts!");
         else
-            Commens.WriteLineToUser($"{BotHand.PlayerName} stands with value {BotHand.GetValue()}");
+            Commens.WriteLineToUser($"{botName} stands with value {botHand.GetValue()}");
     }
 
-    private string DetermineWinner(Hand playerHand, Hand dealerHand)
+    private string DetermineWinner(Player player, int handNumber, Player dealer)
     {
+        string playerName = player.GetHands().Count > 1 ? $"{player.GetName()}'s {handNumber+1}.Hand" : player.GetName();
+        var playerHand = player.GetHands()[handNumber];
         if (playerHand.IsBlackjack())
         {
-            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), true);
-            return $"{playerHand.PlayerName} has Blackjack and wins against {dealerHand.PlayerName}!";
+            scoring.IncrementPlayerScore(players.IndexOf(player), true);
+            return $"{playerName} has Blackjack and wins against {dealer.GetName()}!";
         }
-        if (dealerHand.IsBust())
+        if (dealer.GetHands()[0].IsBust())
         {
-            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), true);
-            return $"{dealerHand.PlayerName} busts. {playerHand.PlayerName} wins!";
+            scoring.IncrementPlayerScore(players.IndexOf(player), true);
+            return $"{dealer.GetName} busts. {playerName} wins!";
         }
         if (playerHand.IsBust())
         {
-            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), false);
-            return $"{playerHand.PlayerName} busts and loses to {dealerHand.PlayerName}.";
+            scoring.IncrementPlayerScore(players.IndexOf(player), false);
+            return $"{playerName} busts and loses to {dealer.GetName()}.";
         }
-        if (dealerHand.IsBlackjack())
+        if (dealer.GetHands()[0].IsBlackjack())
         {
-            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), false);
-            return $"{dealerHand.PlayerName} has Blackjack and wins against {playerHand.PlayerName}.";
+            scoring.IncrementPlayerScore(players.IndexOf(player), false);
+            return $"{dealer.GetName()} has Blackjack and wins against {playerName}.";
         }
 
         int playerValue = playerHand.GetValue();
-        int dealerValue = dealerHand.GetValue();
+        int dealerValue = dealer.GetHands()[0].GetValue();
         if (playerValue > dealerValue)
         {
-            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), true);
-            return $"{playerHand.PlayerName} wins against {dealerHand.PlayerName}!";
+            scoring.IncrementPlayerScore(players.IndexOf(player), true);
+            return $"{playerName} wins against {dealer.GetName()}!";
         }
         if (playerValue < dealerValue)
         {
-            scoring.IncrementPlayerScore(playerHands.IndexOf(playerHand), false);
-            return $"{playerHand.PlayerName} loses to {dealerHand.PlayerName}.";
+            scoring.IncrementPlayerScore(players.IndexOf(player), false);
+            return $"{playerName} loses to {dealer.GetName()}.";
         }
-        return $"{playerHand.PlayerName} has a push with {dealerHand.PlayerName}.";
+        return $"{playerName} has a push with {dealer.GetName()}.";
     }
 
     private void ClearHands()
     {
-        foreach (var hand in playerHands)
-            hand.Clear();
+        foreach (var player in players)
+            player.clear();
     }
 }

@@ -3,6 +3,7 @@
     private int numberOfDecks = 1;
     private string[] playerNames = ["Player1"];
     private bool[] isBot = [];
+    private Game? game;
 
     public Program()
     {
@@ -18,28 +19,21 @@
         Commens.ClearConsole();
         SetupGame();
 
-        Game game = new(playerNames, isBot, numberOfDecks, new Scoring(playerNames));
         while (true)
         {
             Commens.ClearConsole();
-            game.Start();
+            game?.Start();
 
 
             string again = Commens.GetYorN("Do you want to play again? (Y/N): ");
             if (again == "N")
-                break;
-            if (again == "Y")
             {
                 string newDeck = Commens.GetYorN("Do you want a new Deck? (Y/N): ");
                 if (newDeck == "Y")
                 {
-                    string newSetup = Commens.GetYorN("Do you want a new setup? (Y/N): ");
-                    if (newSetup == "Y")
-                    {
-                        SetupGame();
-                    }
-                    game = new(playerNames, isBot, numberOfDecks, new Scoring(playerNames));
+                    SetupGame();
                 }
+                else break;
             }
             Commens.ClearConsole();
 
@@ -60,6 +54,8 @@
             Commens.WriteLineToUser($"Welcome, {playerNames[i]}!");
         }
         numberOfDecks = Commens.GetIntFromUser("Enter number of decks (1-8): ", 1, 8);
+
+        game = new(playerNames, isBot, numberOfDecks, new Scoring(playerNames));
     }
 
     static void Main()

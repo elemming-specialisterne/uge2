@@ -1,9 +1,8 @@
 // Contains the Hand class representing a player's or dealer's hand in Blackjack
-class Hand(string name, bool isbot = false)
+class Hand(bool isbot = false)
 {
     private readonly List<Card> cards = [];
     private readonly bool isBot = isbot;
-    public readonly string PlayerName = name;
 
     // Add a card to the hand
     public void AddCard(Card card)
@@ -52,12 +51,30 @@ class Hand(string name, bool isbot = false)
         return cards.Count == 2 && GetValue() == 21;
     }
 
+    // Check if the hand can be split (two cards of the same rank)
+    public bool CanSplit()
+    {
+        return cards.Count == 2 && cards[0].CardRank == cards[1].CardRank;
+    }
+
     // Show the Second card in the hand
     public string ShowSecondCard()
     {
         if (cards.Count > 1)
             return cards[1].ToString();
         return "No secound card";
+    }
+
+    // Remove second card and return it (for splitting)
+    public Card RemoveSecondCard()
+    {
+        if (cards.Count > 1)
+        {
+            var card = cards[1];
+            cards.RemoveAt(1);
+            return card;
+        }
+        throw new InvalidOperationException("Cannot remove second card, hand has less than two cards.");
     }
 
     // Show all cards in the hand
