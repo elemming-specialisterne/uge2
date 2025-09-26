@@ -30,32 +30,35 @@ class Game
                 if (players[i].IsBot())
                 {
                     // Simple bot logic: 10% of chips or 10 or all remaining if less than 10
-                    int botBet = Math.Min(Math.Max(10, Convert.ToInt32(currentScore*0.1)), currentScore);
+                    int botBet = Math.Min(Math.Max(10, Convert.ToInt32(currentScore * 0.1)), currentScore);
                     scoring.SetBet(i, botBet);
                     Commens.WriteLineToUser($"{players[i].GetName()} bets {botBet} Chips");
                     continue;
                 }
-                Commens.WriteLineToUser($"{players[i].GetName()}'s current score: {currentScore} Chips");
-                int bet;
-                while (true)
+                else
                 {
-                    if (players[i].IsOut())
+                    Commens.WriteLineToUser($"{players[i].GetName()}'s current score: {currentScore} Chips");
+                    int bet;
+                    while (true)
                     {
-                        Commens.WriteLineToUser($"{players[i].GetName()} is out of the game!");
-                        break;
+                        if (players[i].IsOut())
+                        {
+                            Commens.WriteLineToUser($"{players[i].GetName()} is out of the game!");
+                            break;
+                        }
+                        if (currentScore <= 0)
+                        {
+                            Commens.WriteLineToUser($"{players[i].GetName()} has no Chips left to bet and is out!");
+                            players[i].SetOut(true);
+                            break;
+                        }
+                        bet = Commens.GetIntFromUser($"{players[i].GetName()}, enter your bet amount (max {currentScore}): ", 1, currentScore);
+                        int remainingChips = scoring.SetBet(i, bet);
+                        if (remainingChips == -1)
+                            break; // Bet accepted
+                        else
+                            Commens.WriteLineToUser($"Invalid bet. You have {remainingChips} Chips remaining.");
                     }
-                    if (currentScore <= 0)
-                    {
-                        Commens.WriteLineToUser($"{players[i].GetName()} has no Chips left to bet and is out!");
-                        players[i].SetOut(true);
-                        break;
-                    }
-                    bet = Commens.GetIntFromUser($"{players[i].GetName()}, enter your bet amount (max {currentScore}): ", 1, currentScore);
-                    int remainingChips = scoring.SetBet(i, bet);
-                    if (remainingChips == -1)
-                        break; // Bet accepted
-                    else
-                        Commens.WriteLineToUser($"Invalid bet. You have {remainingChips} Chips remaining.");
                 }
             }
         }

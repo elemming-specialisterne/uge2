@@ -44,10 +44,10 @@ class Betting : Scoring
         for (int i = 0; i < players.Length; i++)
             if (playerScores[i] < 0)
                 Commens.WriteLineToUser($"{players[i]} is out after losing {dealerScores[i]} Chips");
-            else if (dealerScores[i] < 0)
-                Commens.WriteLineToUser($"{players[i]}: {playerScores[i]} Chips, Losing {-dealerScores[i]} Chips");
+            else if (dealerScores[i] > 0)
+                Commens.WriteLineToUser($"{players[i]}: {playerScores[i]} Chips, Losing {dealerScores[i]} Chips");
             else
-                Commens.WriteLineToUser($"{players[i]}: {playerScores[i]} Chips, Winning {dealerScores[i]} Chips");
+                Commens.WriteLineToUser($"{players[i]}: {playerScores[i]} Chips, Winning {-dealerScores[i]} Chips");
         Commens.WriteLineToUser("Total dealer winnings: " + dealerScores.Sum());
     }
 }
