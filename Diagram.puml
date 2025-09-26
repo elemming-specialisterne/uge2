@@ -1,0 +1,92 @@
+@startuml Blackjack
+class Card {
+    - rank: enum
+    - suit: enum
+    + Card(rank: String, suit: String)
+    + GetValue(): int
+    + ToString(): String
+}
+
+class Deck {
+    - cards: List<Card>
+    + Deck(numberOfDecks: int)
+    + DealCard(): Card
+}
+
+class Hand {
+    - cards: List<Card>
+    + Hand()
+    + AddCard(card: Card): void
+    + GetValue(): int
+    + IsBust(): boolean
+    + IsBlackjack(): boolean
+    + CanSplit(): boolean
+    + ShowSecondCard(): String
+    + RemoveSecondCard(): Card
+    + ToString(): String
+    + Clear(): void
+}
+
+class Player {
+    - name: String
+    - hands: List<Hand>
+    - isOut: boolean
+    + Player(name: String)
+    + getName(): String
+    + getHands(): List<Hand>
+    + addHand(hand: Hand): void
+}
+
+class Game{
+    - deck: Deck
+    - players: List<Player>
+    - scoring: Scoring
+    + Game(playerNames: List<String>, scoring: Scoring)
+    + start(): void
+}
+
+class Program{
+    + main(args: String[]): void
+}
+
+class Scoring{
+    {abstract} + IncrementPlayerScore(int, boolean): boolean
+    {abstract} + DisplayScores(): void
+    {abstract} + SetBet(): int
+    + IncrementTotalGames(): void
+    + IsBetting(): boolean
+    + GetPlayerScore(): int
+}
+
+class Point_system{
+    + Point_system()
+    + IncrementPlayerScore(int, boolean): boolean
+    + DisplayScores(): void
+}
+
+class Betting{
+    - playerBets: int[]
+    + IncrementPlayerScore(int, boolean): boolean
+    + DisplayScores(): void
+    + SetBet(): int
+}
+
+Class commens{
+    {static} + GetUserInput(prompt: String): String
+    {static} + GetUserChoice(prompt: String, choices: List<String>): String
+    {static} + GetUserIntInput(prompt: String, min: int, max: int): int
+    {static} + writeToConsole(message: String): void
+    {static} + ClearConsole(): void
+}
+
+Deck "1" -- "1..*" Card : contains >
+Hand "0" -- "*" Card : contains >
+Player "1" -- "*" Hand : has >
+Game "2" -- "*" Player : includes >
+Game "1" -- "1" Deck : uses >
+Game "1" -- "1" Scoring : uses >
+Scoring <|-- Point_system
+Scoring <|-- Betting
+Program "1" -- "1" Game : starts >
+
+@enduml
