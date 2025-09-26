@@ -1,5 +1,4 @@
-# README
-## Blackjack 
+# Blackjack 
 For the Blackjack exercise in week 2 written in C#.
 
 ## Description
@@ -20,12 +19,19 @@ Need to be compiled with a .NET 9.0 compiler.
 go to /Blackjack/bin/Debug/net9.0/
 There should be a file called Blackjack.exe witch can be run to start the program in a new terminal.
 
+## Help
+
 ## Auther
 Emil Lemming
 
 ## Version history
 
+* 0.1
+    * Initial Release
+
 ## License
+
+Currently no license :-(
 
 ## Acknowledgment
 
